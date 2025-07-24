@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyCharm
+.idea/
+
+# Environment files
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Test output
+test/test_output/
+test_output/
+
+# HTML output
+diarios_html/
+*.html
+
+# Coverage reports
+htmlcov/
+.coverage
+.cache
+
+# Logs and temp
+*.log
+*.tmp
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# VSCode settings (if used)
+.vscode/
+
+# Python virtual environment
+congreso_scraper/lib/
+congreso_scraper/include/
+congreso_scraper/bin/
