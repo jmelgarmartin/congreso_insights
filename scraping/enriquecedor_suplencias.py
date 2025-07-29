@@ -1,14 +1,11 @@
 import pandas as pd
 import re
-import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 from scraping.utils.selenium_utils import (
     iniciar_driver,
     esperar_spinner,
     esperar_tabla_cargada,
-    hacer_click_esperando,
     seleccionar_opcion_por_valor,
     aceptar_cookies
 )

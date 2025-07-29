@@ -4,18 +4,13 @@ import os
 import re
 import time
 from bs4 import BeautifulSoup
-from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait, Select
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
 from scraping.utils.selenium_utils import (
     iniciar_driver,
     aceptar_cookies,
     seleccionar_opcion_por_valor,
-    esperar_spinner,
-    esperar_tabla_cargada,
     hacer_click_esperando
 )
 
