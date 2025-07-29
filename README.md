@@ -39,7 +39,7 @@ congreso_insights/
 ---
 ## Componentes
 
-- `scraping/`: Código para descargar los diarios de sesiones desde la web del Congreso.
+- `scraping/`: Código para descargar los datos necesarios desde la web del Congreso.
 - `analysis/`: Funciones para conectar con Neo4j y analizar relaciones entre intervenciones, partidos y temas.
 - `tests/`: Tests unitarios para garantizar el correcto funcionamiento del sistema.
 - `diarios_html/`: Carpeta donde se guardan los HTML descargados.
@@ -47,7 +47,7 @@ congreso_insights/
 ## Uso
 
 ```bash
-python main.py
+python main.py (opción)
 ```
 ## Requisitos
 - `Python 3.8+`
