@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
@@ -26,6 +26,9 @@ test_output/
 diarios_html/
 *.html
 
+# Salidas del scraper
+diputados.csv
+
 # Coverage reports
 htmlcov/
 .coverage
@@ -46,3 +49,7 @@ Thumbs.db
 congreso_scraper/lib/
 congreso_scraper/include/
 congreso_scraper/bin/
+
+
+#archivos pickle
+*.pickle

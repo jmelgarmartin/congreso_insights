@@ -10,6 +10,15 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
+from scraping.utils.selenium_utils import (
+    iniciar_driver,
+    aceptar_cookies,
+    seleccionar_opcion_por_valor,
+    esperar_spinner,
+    esperar_tabla_cargada,
+    hacer_click_esperando
+)
+
 
 class CongresoScraper:
     def __init__(self, driver_path: str, output_dir: str, legislatura: str = "15"):
@@ -21,29 +30,17 @@ class CongresoScraper:
         self.wait = None
         os.makedirs(output_dir, exist_ok=True)
 
-    def _init_driver(self):
-        options = Options()
-        options.add_argument("--start-maximized")
-        service = Service(self.driver_path)
-        self.driver = webdriver.Chrome(service=service, options=options)
-        self.wait = WebDriverWait(self.driver, 20)
-
-    def _accept_cookies(self):
-        try:
-            self.wait.until(EC.element_to_be_clickable((By.XPATH, "//a[normalize-space(text())='Aceptar todas']"))).click()
-            print("Cookies aceptadas.")
-        except Exception as e:
-            print("No se pudo aceptar cookies:", e)
-
     def _apply_filters(self):
         try:
             self.wait.until(EC.presence_of_element_located((By.ID, "_publicaciones_legislatura")))
             print("Aplicando filtros...")
             Select(self.driver.find_element(By.ID, "_publicaciones_legislatura")).select_by_value(self.legislatura)
-            Select(self.driver.find_element(By.ID, "publicacion")).select_by_value("D")
-            Select(self.driver.find_element(By.ID, "seccion")).select_by_value("CONGRESO")
+            seleccionar_opcion_por_valor(self.driver.find_element(By.ID, "publicacion"), "D")
+            seleccionar_opcion_por_valor(self.driver.find_element(By.ID, "seccion"), "CONGRESO")
             time.sleep(1)
-            self.driver.find_element(By.XPATH, "//button[.//span[normalize-space(text())='Buscar']]").click()
+            hacer_click_esperando(self.driver, self.wait, By.XPATH,
+                                  "//button[.//span[normalize-space(text())='Buscar']]")
+
             print("Buscando resultados...")
             self.wait.until(EC.presence_of_element_located((By.XPATH, "//tr[td//a[contains(text(),'Texto íntegro')]]")))
             print("Resultados cargados.")
@@ -103,9 +100,9 @@ class CongresoScraper:
         return True
 
     def descargar_plenos(self):
-        self._init_driver()
+        self.driver, self.wait = iniciar_driver(self.driver_path)
         self.driver.get(self.url)
-        self._accept_cookies()
+        aceptar_cookies(self.driver, self.wait)
         self._apply_filters()
 
         descargados = 0
@@ -119,7 +116,8 @@ class CongresoScraper:
             while i < len(filas):
                 for _ in range(3):
                     try:
-                        filas_actualizadas = self.driver.find_elements(By.XPATH, "//tr[td//a[contains(text(),'Texto íntegro')]]")
+                        filas_actualizadas = self.driver.find_elements(By.XPATH,
+                                                                       "//tr[td//a[contains(text(),'Texto íntegro')]]")
                         if i >= len(filas_actualizadas):
                             break
                         if self._procesar_fila(filas_actualizadas[i]):
@@ -135,10 +133,12 @@ class CongresoScraper:
                 break
 
             try:
-                siguiente = self.driver.find_element(By.XPATH, "//ul[@id='_publicaciones_paginationLinksPublicaciones']//a[text()='>']")
+                siguiente = self.driver.find_element(By.XPATH,
+                                                     "//ul[@id='_publicaciones_paginationLinksPublicaciones']//a[text()='>']")
                 siguiente.click()
                 pagina += 1
-                self.wait.until(EC.presence_of_element_located((By.XPATH, "//tr[td//a[contains(text(),'Texto íntegro')]]")))
+                self.wait.until(
+                    EC.presence_of_element_located((By.XPATH, "//tr[td//a[contains(text(),'Texto íntegro')]]")))
             except Exception as e:
                 print("No hay más páginas:", e)
                 break

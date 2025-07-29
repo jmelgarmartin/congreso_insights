@@ -8,18 +8,33 @@
 
 ```text
 congreso_insights/
-├── scraping/
-│ └── congreso_scraper.py
-├── analysis/
-│ └── graph_builder.py
-├── tests/
-│ └── test_congreso_scraper.py
-│ └── test_graph_builder.py
-├── diarios_html/
-├── main.py
-├── README.md
-├── requirements.txt
-└── .gitignore
+│
+├── main.py                         # Script principal de ejecución
+├── README.md                       # Documentación del proyecto
+├── requirements.txt                # Dependencias necesarias
+├── .gitignore                      # Archivos excluidos del control de versiones
+├── diputados.csv                   # Salida generada con datos de diputados
+├── diarios_html/                   # HTMLs descargados de los diarios del Congreso
+│
+├── analysis/                       # Módulo de análisis de discursos
+│   ├── __init__.py
+│   └── graph_builder.py           # Carga del grafo en Neo4j 
+│
+├── scraping/                       # Módulo de scraping web
+│   ├── __init__.py
+│   ├── congreso_scraper.py        # Scraper de diarios de sesiones
+│   ├── scraper_diputados.py       # Scraper del listado de diputados
+│   ├── enriquecedor_suplencias.py # Enriquecimiento de suplencias parlamentarias
+│   └── utils/                     # Utilidades compartidas
+│       ├── __init__.py
+│       └── selenium_utils.py      # Inicialización y helpers para Selenium
+│
+├── test/                           # Tests unitarios del proyecto
+│   ├── __init__.py
+│   ├── test_congreso_scraper.py   # Tests del scraper de plenos
+│   ├── test_graph_builder.py      # Tests de construcción de grafos
+│   └── test_output/               # Carpeta de salida para pruebas (ignorada en Git)
+
 ```
 ---
 ## Componentes
