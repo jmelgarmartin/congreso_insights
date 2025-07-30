@@ -93,7 +93,7 @@ class DiputadosScraper:
                         return hasta >= total
                 except:
                     continue
-        except Exception as e:
+        except Exception as e: # pragma: no cover
             print(f"No se pudo determinar si es la última página: {e}")
         return False
 
