@@ -31,7 +31,7 @@ congreso_insights/
 │       ├── __init__.py
 │       └── selenium_utils.py       # Inicialización y funciones auxiliares
 │
-├── test/                           # Tests unitarios del proyecto
+├── tests/                           # Tests unitarios del proyecto
 │   ├── __init__.py
 │   ├── test_congreso_scraper.py    # Tests del scraping de diarios
 │   ├── test_graph_builder.py       # Tests del análisis en Neo4j

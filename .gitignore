@@ -19,8 +19,9 @@ venv.bak/
 .ipynb_checkpoints
 
 # Test output
-test/test_output/
-test_output/
+tests/test_output/
+tests/output/
+tests/dummy_dir/
 
 # HTML output
 diarios_html/
@@ -50,6 +51,11 @@ congreso_scraper/lib/
 congreso_scraper/include/
 congreso_scraper/bin/
 
-
 #archivos pickle
 *.pickle
+
+# Informes de cobertura
+htmlcov/
+.coverage
+coverage.xml
+.cache/
