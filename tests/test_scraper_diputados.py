@@ -4,12 +4,13 @@ import pandas as pd
 from unittest.mock import MagicMock, patch
 from scraping.scraper_diputados import DiputadosScraper
 
-
+# Crea una instancia de prueba del scraper con rutas dummy
 @pytest.fixture
 def scraper():
     return DiputadosScraper(driver_path="dummy_path", output_csv="dummy.csv", legislatura="15")
 
 
+# Verifica que _init_driver asigna correctamente driver y wait desde iniciar_driver()
 def test_init_driver(scraper):
     with patch("scraping.scraper_diputados.iniciar_driver") as mock_init:
         mock_init.return_value = ("driver", "wait")
@@ -18,6 +19,7 @@ def test_init_driver(scraper):
         assert scraper.wait == "wait"
 
 
+# Verifica que _extraer_info_diputado devuelve correctamente los datos extraídos de una fila
 def test_extraer_info_diputado(scraper):
     fila = MagicMock()
     celdas = [MagicMock(text="Grupo X"), MagicMock(text="Provincia Y")]
@@ -32,6 +34,7 @@ def test_extraer_info_diputado(scraper):
     }
 
 
+# Verifica que _procesar_pagina recorre todas las filas y devuelve la lista de diputados extraída
 def test_procesar_pagina(scraper):
     fila_mock = MagicMock()
     fila_mock.find_element.return_value.text = "Nombre"
@@ -51,24 +54,28 @@ def test_procesar_pagina(scraper):
         assert resultados[0]["nombre"] == "Nombre"
 
 
+# Verifica que se detecta correctamente la última página cuando hasta == total
 def test_es_ultima_pagina_true(scraper):
     scraper.driver = MagicMock()
     scraper.driver.find_element.return_value.text = "Resultados 1 a 10 de 10"
     assert scraper._es_ultima_pagina() is True
 
 
+# Verifica que no se detecta como última página cuando hasta < total
 def test_es_ultima_pagina_false(scraper):
     scraper.driver = MagicMock()
     scraper.driver.find_element.return_value.text = "Resultados 1 a 10 de 20"
     assert scraper._es_ultima_pagina() is False
 
 
+# Verifica que se devuelve False si ocurre una excepción durante la evaluación de última página
 def test_es_ultima_pagina_raises(scraper):
     scraper.driver = MagicMock()
     scraper.driver.find_element.side_effect = Exception("fallo")
     assert scraper._es_ultima_pagina() is False
 
 
+# Verifica que _buscar_diputados aplica correctamente los filtros y espera a los elementos
 @patch("scraping.scraper_diputados.esperar_spinner")
 @patch("scraping.scraper_diputados.esperar_tabla_cargada")
 @patch("scraping.scraper_diputados.hacer_click_esperando")
@@ -81,9 +88,9 @@ def test_buscar_diputados(mock_cookies, mock_seleccionar, mock_click, mock_spinn
     element_legislatura = MagicMock()
     element_legislatura.get_attribute.return_value = "14"  # fuerza cambio
     scraper.driver.find_element.side_effect = [
-        element_legislatura,  # _diputadomodule_legislatura
-        MagicMock(),  # _diputadomodule_tipo
-        MagicMock()  # _diputadomodule_searchButtonDiputadosForm
+        element_legislatura,
+        MagicMock(),
+        MagicMock()
     ]
 
     scraper.wait.until.return_value = True
@@ -95,6 +102,7 @@ def test_buscar_diputados(mock_cookies, mock_seleccionar, mock_click, mock_spinn
     assert mock_tabla.called
 
 
+# Verifica que _siguiente_pagina hace clic correctamente cuando no es la última página
 @patch("scraping.scraper_diputados.esperar_spinner")
 @patch("scraping.scraper_diputados.esperar_tabla_cargada")
 def test_siguiente_pagina_true(mock_tabla, mock_spinner, scraper):
@@ -109,6 +117,7 @@ def test_siguiente_pagina_true(mock_tabla, mock_spinner, scraper):
     assert siguiente_btn.click.called or scraper.driver.execute_script.called
 
 
+# Verifica que _siguiente_pagina no hace nada si ya estamos en la última página
 @patch("scraping.scraper_diputados.esperar_spinner")
 @patch("scraping.scraper_diputados.esperar_tabla_cargada")
 def test_siguiente_pagina_false(mock_tabla, mock_spinner, scraper):
@@ -119,6 +128,7 @@ def test_siguiente_pagina_false(mock_tabla, mock_spinner, scraper):
     assert scraper._siguiente_pagina() is False
 
 
+# Verifica que _siguiente_pagina devuelve False si ocurre una excepción durante el cambio de página
 @patch("scraping.scraper_diputados.esperar_spinner")
 @patch("scraping.scraper_diputados.esperar_tabla_cargada")
 def test_siguiente_pagina_exception(mock_tabla, mock_spinner, scraper):
@@ -129,6 +139,7 @@ def test_siguiente_pagina_exception(mock_tabla, mock_spinner, scraper):
     assert scraper._siguiente_pagina() is False
 
 
+# Verifica que guardar_csv escribe correctamente el DataFrame a un archivo CSV
 def test_guardar_csv(tmp_path, scraper):
     df = pd.DataFrame([{"nombre": "Diputado", "grupo_actual": "Grupo", "provincia": "Provincia"}])
     output = tmp_path / "diputados.csv"
@@ -139,6 +150,7 @@ def test_guardar_csv(tmp_path, scraper):
     assert "Diputado" in contenido
 
 
+# Verifica que ejecutar() recorre varias páginas, procesa, enriquece y guarda los resultados
 @patch("scraping.scraper_diputados.EnriquecedorSuplencias")
 @patch("scraping.scraper_diputados.pd.DataFrame.to_csv")
 @patch.object(DiputadosScraper, "_siguiente_pagina", side_effect=[True, False])
@@ -168,4 +180,3 @@ def test_ejecutar(
     assert mock_procesar.call_count == 2
     assert mock_siguiente.call_count == 2
     assert mock_csv.called
-
