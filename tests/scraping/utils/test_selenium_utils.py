@@ -1,4 +1,4 @@
-# test/utils/test_selenium_utils.py
+# test/scraping/utils/test_selenium_utils.py
 
 import pytest
 from unittest.mock import mock_open, patch, MagicMock

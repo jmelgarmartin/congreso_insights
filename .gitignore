@@ -1,4 +1,5 @@
 # Byte-compiled / optimized / DLL files
+__pycache__/
 **/__pycache__/
 *.py[cod]
 *$py.class
@@ -27,35 +28,31 @@ tests/dummy_dir/
 diarios_html/
 *.html
 
-# Salidas del scraper
-diputados.csv
+# Scraper outputs
+*.csv
+*.log
+*.tmp
+*.pickle
+*.bak
+*~
+
+# Fake data
+fake/
 
 # Coverage reports
 htmlcov/
 .coverage
 .cache
+coverage.xml
 
-# Logs and temp
-*.log
-*.tmp
-
-# OS-specific
-.DS_Store
-Thumbs.db
-
-# VSCode settings (if used)
+# Editor config files
 .vscode/
 
-# Python virtual environment
+# Python virtual environment (manual install)
 congreso_scraper/lib/
 congreso_scraper/include/
 congreso_scraper/bin/
 
-#archivos pickle
-*.pickle
-
-# Informes de cobertura
-htmlcov/
-.coverage
-coverage.xml
-.cache/
+# OS-specific
+.DS_Store
+Thumbs.db

@@ -3,7 +3,6 @@
 import os
 import re
 import time
-from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,12 +10,25 @@ from scraping.utils.selenium_utils import (
     iniciar_driver,
     aceptar_cookies,
     seleccionar_opcion_por_valor,
-    hacer_click_esperando
+    hacer_click_esperando,
+    click_siguiente_pagina,
+    get_rango_resultados,
+    guardar_html_contenido
 )
 
 
 class CongresoScraper:
+    """Scraper para descargar los plenos del Congreso desde la web oficial."""
+
+
     def __init__(self, driver_path: str, output_dir: str, legislatura: str = "15"):
+        """
+        Inicializa el scraper con los parámetros necesarios.
+
+        :param driver_path: Ruta al ejecutable de ChromeDriver.
+        :param output_dir: Directorio donde se guardarán los archivos HTML descargados.
+        :param legislatura: Número de la legislatura a consultar (por defecto "15").
+        """
         self.url = "https://www.congreso.es/busqueda-de-publicaciones"
         self.driver_path = driver_path
         self.output_dir = output_dir
@@ -26,6 +38,9 @@ class CongresoScraper:
         os.makedirs(output_dir, exist_ok=True)
 
     def _apply_filters(self):
+        """
+        Aplica los filtros necesarios en la página web para obtener los plenos de la legislatura seleccionada.
+        """
         try:
             self.wait.until(EC.presence_of_element_located((By.ID, "_publicaciones_legislatura")))
             print("Aplicando filtros...")
@@ -44,17 +59,13 @@ class CongresoScraper:
             self.driver.quit()
             raise
 
-    def _get_rango_resultados(self):
-        try:
-            texto = self.driver.find_element(By.ID, "_publicaciones_resultsShowedPublicaciones").text
-            match = re.search(r"Resultados (\d+) a (\d+) de (\d+)", texto)
-            if match:
-                return int(match.group(2)), int(match.group(3))
-        except:
-            pass
-        return None, None
-
     def _procesar_fila(self, fila):
+        """
+        Procesa una fila individual de resultados y guarda el contenido si corresponde a un pleno.
+
+        :param fila: WebElement correspondiente a una fila de resultados.
+        :return: True si se guardó un archivo nuevo, False en caso contrario.
+        """
         cve_td = fila.find_elements(By.TAG_NAME, "td")
         cve_text = ""
         for td in cve_td:
@@ -81,11 +92,12 @@ class CongresoScraper:
         self.driver.switch_to.window(self.driver.window_handles[-1])
         self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
-        soup = BeautifulSoup(self.driver.page_source, "html.parser")
-        contenido = soup.find("section", id="portlet_publicaciones")
-        if contenido:
-            with open(ruta, "w", encoding="utf-8") as f:
-                f.write(str(contenido))
+        if guardar_html_contenido(
+                self.driver,
+                self.wait,
+                selector="section#portlet_publicaciones",
+                ruta_archivo=ruta
+        ):
             print(f"Guardado: {nombre_archivo}")
         else:
             print(f"No se encontró contenido en: {nombre_archivo}")
@@ -95,6 +107,7 @@ class CongresoScraper:
         return True
 
     def descargar_plenos(self):
+        """Descarga todos los plenos disponibles aplicando los filtros y guardando el contenido en archivos HTML."""
         self.driver, self.wait = iniciar_driver(self.driver_path)
         self.driver.get(self.url)
         aceptar_cookies(self.driver, self.wait)
@@ -102,17 +115,17 @@ class CongresoScraper:
 
         descargados = 0
         pagina = 1
+        xpath_siguiente = "//ul[@id='_publicaciones_paginationLinksPublicaciones']//a[text()='>']"
+        selector_tabla = "//tr[td//a[contains(text(),'Texto íntegro')]]"
 
         while True:
             print(f"Página {pagina}")
-            filas = self.driver.find_elements(By.XPATH, "//tr[td//a[contains(text(),'Texto íntegro')]]")
+            filas = self.driver.find_elements(By.XPATH, selector_tabla)
 
-            i = 0
-            while i < len(filas):
-                for _ in range(3):
+            for i in range(len(filas)):
+                for intento in range(3):
                     try:
-                        filas_actualizadas = self.driver.find_elements(By.XPATH,
-                                                                       "//tr[td//a[contains(text(),'Texto íntegro')]]")
+                        filas_actualizadas = self.driver.find_elements(By.XPATH, selector_tabla)
                         if i >= len(filas_actualizadas):
                             break
                         if self._procesar_fila(filas_actualizadas[i]):
@@ -120,23 +133,17 @@ class CongresoScraper:
                         break
                     except Exception as e:
                         print(f"Error procesando fila {i + 1}: {e}")
-                i += 1
 
-            hasta, total = self._get_rango_resultados()
+            hasta, total = get_rango_resultados(self.driver, "_publicaciones_resultsShowedPublicaciones")
             if hasta is None or hasta >= total:
-                print("Ultima página detectada.")
+                print("Última página detectada.")
                 break
 
-            try:
-                siguiente = self.driver.find_element(By.XPATH,
-                                                     "//ul[@id='_publicaciones_paginationLinksPublicaciones']//a[text()='>']")
-                siguiente.click()
-                pagina += 1
-                self.wait.until(
-                    EC.presence_of_element_located((By.XPATH, "//tr[td//a[contains(text(),'Texto íntegro')]]")))
-            except Exception as e:
-                print("No hay más páginas:", e)
+            if not click_siguiente_pagina(self.driver, self.wait, xpath_siguiente, selector_tabla):
+                print("No hay más páginas.")
                 break
+
+            pagina += 1
 
         self.driver.quit()
         print("\nProceso completado")

@@ -5,7 +5,6 @@ import argparse
 from scraping.congreso_scraper import CongresoScraper
 from scraping.scraper_diputados import DiputadosScraper
 from scraping.scraper_grupos import GruposScraper
-from scraping.scraper_ministros import MinistrosScraper
 
 def main():
     parser = argparse.ArgumentParser(description="Ejecutar scraper del Congreso.")
