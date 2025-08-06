@@ -31,7 +31,7 @@ class DiputadosScraper:
 
     def _init_driver(self):
         """Inicializa el driver de Selenium."""
-        self.driver, self.wait = iniciar_driver(self.driver_path)
+        self.driver, self.wait = iniciar_driver(self.driver_path, headless=True)
 
     def _buscar_diputados(self):
         """Aplica los filtros en la web para iniciar la búsqueda de diputados."""

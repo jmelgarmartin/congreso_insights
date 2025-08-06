@@ -25,7 +25,7 @@ class EnriquecedorSuplencias:
         self.wait = None
 
     def _init_driver(self):
-        self.driver, self.wait = iniciar_driver(self.driver_path, headless=False) # pragma: no cover
+        self.driver, self.wait = iniciar_driver(self.driver_path, headless=True) # pragma: no cover
 
     def _seleccionar_filtros(self):
         self.driver.get(self.url)

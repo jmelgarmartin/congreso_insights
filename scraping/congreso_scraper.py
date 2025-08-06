@@ -108,7 +108,7 @@ class CongresoScraper:
 
     def descargar_plenos(self):
         """Descarga todos los plenos disponibles aplicando los filtros y guardando el contenido en archivos HTML."""
-        self.driver, self.wait = iniciar_driver(self.driver_path)
+        self.driver, self.wait = iniciar_driver(self.driver_path, headless=True)
         self.driver.get(self.url)
         aceptar_cookies(self.driver, self.wait)
         self._apply_filters()

@@ -38,18 +38,31 @@ def test_extraer_info_legislatura(mock_cookies, mock_spinner, mock_select, scrap
 @patch("scraping.scraper_grupos.hacer_click_esperando")
 @patch("scraping.scraper_grupos.esperar_spinner")
 def test_extraer_altas_bajas(mock_spinner, mock_click, mock_espera_tabla, mock_ultima, scraper):
-    """Verifica que se extraen correctamente las filas de diputados con fechas."""
+    """Verifica que se extraen correctamente las filas de diputados con nombre en <th> y fechas en <td>."""
+
+    # Fila simulada con un <th> y dos <td>
     fila = MagicMock()
-    td1 = MagicMock(text="Nombre Diputado")
-    td2 = MagicMock(text="01/01/2023")
-    td3 = MagicMock(text="31/12/2023")
-    fila.find_elements.return_value = [td1, td2, td3]
+
+    # Simula el <th> con el nombre del diputado
+    th = MagicMock()
+    th.text = "Nombre Diputado"
+    fila.find_element.return_value = th  # .find_element(By.TAG_NAME, "th")
+
+    # Simula los <td> con fecha de alta y baja
+    td1 = MagicMock()
+    td1.text = "01/01/2023"
+    td2 = MagicMock()
+    td2.text = "31/12/2023"
+    fila.find_elements.return_value = [td1, td2]  # .find_elements(By.TAG_NAME, "td")
+
+    # Asignar la fila simulada al driver mock
     scraper.driver.find_elements.return_value = [fila]
+    scraper.driver.find_element.return_value = MagicMock()  # requerido por hacer_click_esperando
 
-    scraper.driver.find_element.return_value = MagicMock()
-
+    # Ejecutar
     datos = scraper._extraer_altas_bajas("PSOE", "https://www.fake-url.com")
 
+    # Verificar salida
     assert datos == [{
         "nombre": "Nombre Diputado",
         "grupo_parlamentario": "PSOE",
