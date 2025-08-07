@@ -3,6 +3,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from scraping.congreso_scraper import CongresoScraper
+import logging
 
 
 @pytest.fixture
@@ -232,27 +233,25 @@ def test_descargar_plenos_no_hay_mas_paginas(mock_iniciar, mock_cookies, mock_fi
 @patch("scraping.congreso_scraper.seleccionar_opcion_por_valor")
 @patch("scraping.congreso_scraper.Select")
 @patch("scraping.congreso_scraper.EC")
-def test_apply_filters_cobertura_final(mock_ec, mock_select, mock_sel_valor, mock_click, scraper, capsys):
+def test_apply_filters_cobertura_final(mock_ec, mock_select, mock_sel_valor, mock_click, scraper, caplog):
     """
-    Test para cubrir los prints 'Aplicando filtros...' y 'Resultados cargados.'
-    en el método _apply_filters().
+    Test para cubrir los logs 'Aplicando filtros...' y 'Resultados cargados.' en el método _apply_filters().
     """
-    # Configura mocks
     scraper.driver = MagicMock()
     scraper.wait = MagicMock()
     scraper.driver.find_element.return_value = MagicMock()
 
     # Simula que los dos `until` se ejecutan correctamente
-    scraper.wait.until.side_effect = [True, True]
+    scraper.wait.until.side_effect = [MagicMock(), MagicMock()]  # <-- O dos MagicMock, NO True
     mock_ec.presence_of_element_located.return_value = MagicMock()
 
-    # Ejecutar
-    scraper._apply_filters()
+    # Ejecutar y capturar logs
+    with caplog.at_level(logging.INFO):
+        scraper._apply_filters()
 
-    # Captura y verifica los prints
-    captured = capsys.readouterr()
-    assert "Aplicando filtros..." in captured.out
-    assert "Resultados cargados." in captured.out
+    assert "Aplicando filtros..." in caplog.text
+    assert "Resultados cargados." in caplog.text
+
 
 
 @patch("scraping.congreso_scraper.iniciar_driver")
@@ -264,7 +263,8 @@ def test_apply_filters_cobertura_final(mock_ec, mock_select, mock_sel_valor, moc
 @patch("scraping.congreso_scraper.Select")
 @patch("scraping.congreso_scraper.EC")
 def test_descargar_plenos_cobertura_final(
-    mock_ec, mock_select, mock_sel_valor, mock_click, mock_guardar, mock_next, mock_rango, mock_iniciar_driver, scraper
+        mock_ec, mock_select, mock_sel_valor, mock_click, mock_guardar, mock_next, mock_rango, mock_iniciar_driver,
+        scraper
 ):
     """
     Test para cubrir el 'if i >= len(filas_actualizadas)' y 'pagina += 1'
@@ -281,7 +281,7 @@ def test_descargar_plenos_cobertura_final(
     fila = MagicMock()
     driver_mock.find_elements.side_effect = [
         [fila],  # filas iniciales
-        []       # filas_actualizadas vacías → se cumple i >= len()
+        []  # filas_actualizadas vacías → se cumple i >= len()
     ]
 
     wait_mock.until.return_value = True
@@ -305,7 +305,7 @@ def test_descargar_plenos_cobertura_final(
 @patch("scraping.congreso_scraper.Select")
 @patch("scraping.congreso_scraper.EC")
 def test_descargar_plenos_cobertura_pagina_incrementada(
-    mock_ec, mock_select, mock_sel_valor, mock_click, mock_guardar, mock_next, mock_rango, mock_iniciar
+        mock_ec, mock_select, mock_sel_valor, mock_click, mock_guardar, mock_next, mock_rango, mock_iniciar
 ):
     """
     Test para garantizar que se ejecuta la línea `pagina += 1`
@@ -328,7 +328,7 @@ def test_descargar_plenos_cobertura_pagina_incrementada(
     mock_driver.find_elements.side_effect = [
         [fila], [fila],  # Primera página
         [fila], [fila],  # Segunda página
-        []               # Tercera iteración: se detiene
+        []  # Tercera iteración: se detiene
     ]
 
     mock_rango.return_value = (1, 100)

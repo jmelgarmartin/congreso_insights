@@ -13,6 +13,8 @@ from scraping.utils.selenium_utils import (
     es_ultima_pagina,
     click_siguiente_pagina
 )
+import logging
+logger = logging.getLogger(__name__)
 
 
 class GruposScraper:
@@ -31,7 +33,7 @@ class GruposScraper:
         aceptar_cookies(self.driver, self.wait)
         esperar_spinner(self.wait)  # Reemplaza time.sleep(1) por una espera más robusta
 
-        print("Seleccionando legislatura...")
+        logger.info("Seleccionando legislatura...")
         select_legislatura = self.driver.find_element(By.ID, "_grupos_legislatura")
         # Usa seleccionar_opcion_por_valor para elegir la legislatura
         seleccionar_opcion_por_valor(select_legislatura, self.legislatura)
@@ -62,7 +64,7 @@ class GruposScraper:
             self.wait.until(EC.presence_of_element_located((By.ID, "_grupos_ajaxContentDiputados")))
             esperar_tabla_cargada(self.wait, "#_grupos_contentPaginationDiputados table tbody tr")
         except Exception as e:
-            print(f"No se pudo seleccionar 'Altas y bajas' para {grupo_nombre}: {e}")
+            logger.error(f"No se pudo seleccionar 'Altas y bajas' para {grupo_nombre}: {e}")
             return []
 
         datos = []
@@ -83,10 +85,11 @@ class GruposScraper:
                             "nombre": nombre,
                             "grupo_parlamentario": grupo_nombre,
                             "fecha_alta": fecha_alta,
-                            "fecha_baja": fecha_baja
+                            "fecha_baja": fecha_baja,
+                            "legislatura":self.legislatura
                         })
                 except Exception as e:
-                    print(f"Error al procesar fila en {grupo_nombre}: {e}")
+                    logger.error(f"Error al procesar fila en {grupo_nombre}: {e}")
                     continue
 
             if es_ultima_pagina(self.driver, "_grupos_resultsShowedFooterDiputados"):
@@ -106,17 +109,17 @@ class GruposScraper:
 
     def ejecutar(self, output_csv="altas_bajas_grupos.csv"):
         self._init_driver()
-        print("Accediendo a grupos parlamentarios...")
+        logger.info("Accediendo a grupos parlamentarios...")
         enlaces_grupos = self._extraer_info_legislatura()
 
         todos_los_datos = []
         for nombre_grupo, url in enlaces_grupos:
-            print(f"Procesando grupo: {nombre_grupo}")
+            logger.info(f"Procesando grupo: {nombre_grupo}")
             datos = self._extraer_altas_bajas(nombre_grupo, url)
-            print(f"  -> {len(datos)} diputados extraídos")
+            logger.info(f"  -> {len(datos)} diputados extraídos")
             todos_los_datos.extend(datos)
 
         self.driver.quit()
         df = pd.DataFrame(todos_los_datos)
         df.to_csv(output_csv, index=False, encoding="utf-8")
-        print(f"Guardado CSV con {len(df)} filas en {output_csv}")
+        logger.info(f"Guardado CSV con {len(df)} filas en {output_csv}")

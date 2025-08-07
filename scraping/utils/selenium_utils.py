@@ -9,7 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 import re
 from bs4 import BeautifulSoup
-
+import logging
+logger = logging.getLogger(__name__)
 
 def iniciar_driver(driver_path: str, headless: bool = False) -> tuple[webdriver.Chrome, WebDriverWait]:
     """
@@ -38,9 +39,9 @@ def aceptar_cookies(driver: webdriver.Chrome, wait: WebDriverWait):
     """
     try:
         wait.until(EC.element_to_be_clickable((By.XPATH, "//a[normalize-space(text())='Aceptar todas']"))).click()
-        print("Cookies aceptadas.")
+        logger.info("Cookies aceptadas.")
     except Exception as e:
-        print("No se pudo aceptar cookies:", e)
+        logger.error(f"No se pudo aceptar cookies: {e}")
 
 
 def seleccionar_opcion_por_valor(select_element, valor: str):
@@ -55,7 +56,7 @@ def seleccionar_opcion_por_valor(select_element, valor: str):
         Select(select_element).select_by_value(valor)
         return True
     except Exception as e:
-        print(f"Error al seleccionar valor '{valor}': {e}")
+        logger.error(f"Error al seleccionar valor '{valor}': {e}")
         return False
 
 
@@ -142,14 +143,14 @@ def click_siguiente_pagina(
                 if match:
                     rango_anterior = match.group(1)
             except Exception as e:
-                print(f"No se pudo leer el rango anterior: {e}")
+                logger.error(f"No se pudo leer el rango anterior: {e}")
 
         # Rebuscar el botón de siguiente siempre justo antes del clic
         try:
             boton = driver.find_element(By.XPATH, xpath_siguiente)
             driver.execute_script("arguments[0].click();", boton)
         except Exception as e:
-            print(f"No se pudo hacer clic en el botón siguiente: {e}")
+            (logger.error(f"No se pudo hacer clic en el botón siguiente: {e}"))
             return False
 
         esperar_spinner(wait)
@@ -171,7 +172,7 @@ def click_siguiente_pagina(
         return True
 
     except Exception as e:
-        print(f"Error inesperado en click_siguiente_pagina: {e}")
+        logger.error(f"Error inesperado en click_siguiente_pagina: {e}")
         return False
 
 
@@ -213,5 +214,5 @@ def guardar_html_contenido(driver: webdriver.Chrome, wait: WebDriverWait, select
                 f.write(str(contenido))
             return True
     except Exception as e:
-        print(f"Error al guardar el contenido HTML: {e}")
+        logger.error(f"Error al guardar el contenido HTML: {e}")
     return False

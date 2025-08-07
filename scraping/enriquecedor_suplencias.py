@@ -14,6 +14,8 @@ from scraping.utils.selenium_utils import (
     hacer_click_esperando,
     click_siguiente_pagina
 )
+import logging
+logger = logging.getLogger(__name__)
 
 
 class EnriquecedorSuplencias:
@@ -91,7 +93,7 @@ class EnriquecedorSuplencias:
 
     def obtener_df_suplencias(self) -> pd.DataFrame:
         self._init_driver()
-        print("Abriendo página de sustituciones...")
+        logger.info("Abriendo página de sustituciones...")
         self._seleccionar_filtros()
 
         datos = []
@@ -107,7 +109,7 @@ class EnriquecedorSuplencias:
 
             # Usar es_ultima_pagina de utils
             if es_ultima_pagina(self.driver, "_diputadomodule_resultsShowedFooterSustituciones"):
-                print("Última página de suplencias detectada.")
+                logger.info("Última página de suplencias detectada.")
                 break
 
             # Usar click_siguiente_pagina de utils
@@ -119,16 +121,16 @@ class EnriquecedorSuplencias:
                     selector_tabla="#_diputadomodule_contentPaginationSustituciones table tbody tr",
                     id_paginador="_diputadomodule_resultsShowedFooterSustituciones"  # ID del paginador
             ):
-                print("No hay más páginas de suplencias o ocurrió un error al avanzar.")
+                logger.error("No hay más páginas de suplencias o ocurrió un error al avanzar.")
                 break
 
         self.driver.quit()
         return pd.DataFrame(datos)
 
     def enriquecer_df_diputados(self, df_diputados: pd.DataFrame) -> pd.DataFrame:
-        print("Obteniendo datos de suplencias...")
+        logger.info("Obteniendo datos de suplencias...")
         df_suplencias = self.obtener_df_suplencias()
-        print(f"Total de registros de suplencias obtenidos: {len(df_suplencias)}")
+        logger.info(f"Total de registros de suplencias obtenidos: {len(df_suplencias)}")
 
         df_final = df_diputados.copy()
 
@@ -149,5 +151,5 @@ class EnriquecedorSuplencias:
             how="left",
             suffixes=('_diputado', '_suplencia')  # Para manejar columnas con nombres duplicados si los hubiera
         )
-        print("DataFrame de diputados enriquecido con datos de suplencias.")
+        logger.info("DataFrame de diputados enriquecido con datos de suplencias.")
         return df_final

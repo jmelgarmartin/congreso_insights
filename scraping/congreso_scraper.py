@@ -15,7 +15,8 @@ from scraping.utils.selenium_utils import (
     get_rango_resultados,
     guardar_html_contenido
 )
-
+import logging
+logger = logging.getLogger(__name__)
 
 class CongresoScraper:
     """Scraper para descargar los plenos del Congreso desde la web oficial."""
@@ -43,7 +44,7 @@ class CongresoScraper:
         """
         try:
             self.wait.until(EC.presence_of_element_located((By.ID, "_publicaciones_legislatura")))
-            print("Aplicando filtros...")
+            logger.info("Aplicando filtros...")
             Select(self.driver.find_element(By.ID, "_publicaciones_legislatura")).select_by_value(self.legislatura)
             seleccionar_opcion_por_valor(self.driver.find_element(By.ID, "publicacion"), "D")
             seleccionar_opcion_por_valor(self.driver.find_element(By.ID, "seccion"), "CONGRESO")
@@ -51,11 +52,11 @@ class CongresoScraper:
             hacer_click_esperando(self.driver, self.wait, By.XPATH,
                                   "//button[.//span[normalize-space(text())='Buscar']]")
 
-            print("Buscando resultados...")
+            logger.info("Buscando resultados...")
             self.wait.until(EC.presence_of_element_located((By.XPATH, "//tr[td//a[contains(text(),'Texto íntegro')]]")))
-            print("Resultados cargados.")
+            logger.info("Resultados cargados.")
         except Exception as e:
-            print("Error al aplicar filtros:", e)
+            logger.error("Error al aplicar filtros:  {e}")
             self.driver.quit()
             raise
 
@@ -81,12 +82,12 @@ class CongresoScraper:
         ruta = os.path.join(self.output_dir, nombre_archivo)
 
         if os.path.exists(ruta):
-            print(f"Ya existe: {nombre_archivo}")
+            logger.info(f"Ya existe: {nombre_archivo}")
             return False
 
         texto_link = fila.find_element(By.XPATH, ".//a[contains(text(),'Texto íntegro')]")
         href = texto_link.get_attribute("href")
-        print(f"Procesando: {href}")
+        logger.info(f"Procesando: {href}")
 
         self.driver.execute_script("window.open(arguments[0]);", href)
         self.driver.switch_to.window(self.driver.window_handles[-1])
@@ -98,9 +99,9 @@ class CongresoScraper:
                 selector="section#portlet_publicaciones",
                 ruta_archivo=ruta
         ):
-            print(f"Guardado: {nombre_archivo}")
+            logger.info(f"Guardado: {nombre_archivo}")
         else:
-            print(f"No se encontró contenido en: {nombre_archivo}")
+            logger.error(f"No se encontró contenido en: {nombre_archivo}")
 
         self.driver.close()
         self.driver.switch_to.window(self.driver.window_handles[0])
@@ -119,7 +120,7 @@ class CongresoScraper:
         selector_tabla = "//tr[td//a[contains(text(),'Texto íntegro')]]"
 
         while True:
-            print(f"Página {pagina}")
+            logger.info(f"Página {pagina}")
             filas = self.driver.find_elements(By.XPATH, selector_tabla)
 
             for i in range(len(filas)):
@@ -139,7 +140,7 @@ class CongresoScraper:
                 print("Última página detectada.")
                 break
 
-            if not click_siguiente_pagina(self.driver, self.wait, xpath_siguiente, selector_tabla):
+            if not click_siguiente_pagina(self.driver, self.wait, xpath_siguiente, By.XPATH, selector_tabla):
                 print("No hay más páginas.")
                 break
 

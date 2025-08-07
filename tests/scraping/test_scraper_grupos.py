@@ -67,7 +67,8 @@ def test_extraer_altas_bajas(mock_spinner, mock_click, mock_espera_tabla, mock_u
         "nombre": "Nombre Diputado",
         "grupo_parlamentario": "PSOE",
         "fecha_alta": "01/01/2023",
-        "fecha_baja": "31/12/2023"
+        "fecha_baja": "31/12/2023",
+        "legislatura": "15"
     }]
 
 

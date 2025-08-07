@@ -15,7 +15,17 @@ congreso_insights/
 ├── requirements-dev.txt            # Dependencias adicionales para desarrollo y test
 ├── .gitignore                      # Archivos y carpetas ignoradas por Git
 │
-├── diarios_html/                   # HTMLs descargados de diarios de sesiones
+├── diarios_html/                   # HTMLs descargados de diarios de sesiones, organizados por legislatura
+│   └── 15/
+│       └── ...                     # HTMLs de la legislatura 15
+│
+├── csv/                            # Carpeta para salidas CSV organizadas por legislatura
+│   └── 15/
+│       ├── diputados.csv           # Resultado final del scraping de diputados (legislatura 15)
+│       ├── grupos.csv              # Altas y bajas por grupo parlamentario (legislatura 15)
+│       └── ministros_xv.csv        # Lista manual de ministros de la XV legislatura (si corresponde)
+│   └── ...                         # Otras legislaturas (ej. 14, 13, etc.)
+│
 ├── fake/                           # Archivos de ejemplo o mocks
 ├── htmlcov/                        # Reporte de cobertura generado por pytest-cov
 │
@@ -47,17 +57,24 @@ congreso_insights/
 │   │       └── test_selenium_utils.py
 │   └── test_output/                # Salidas temporales generadas en tests
 │
-├── diputados.csv                   # Resultado final del scraping de diputados enriquecido con suplencias
-├── grupos.csv                      # Altas y bajas por grupo parlamentario
-├── ministros_xv.csv                # Lista manual de ministros de la XV legislatura
+├── logs/                           # Carpeta generada automáticamente para los archivos de log (no se sube al repositorio)
+│   ├── diputados.log
+│   ├── grupos.log
+│   └── plenos.log
+│
 ```
 ---
 ## 🚀 Ejecución
 El script principal es main.py. Puedes ejecutarlo en diferentes modos según los datos que quieras descargar:
 ```text
-python main.py --modo plenos         # Descarga diarios de sesiones
-python main.py --modo diputados      # Descarga y enriquece diputados
-python main.py --modo grupos         # Descarga composición de grupos
+# Descargar plenos (HTMLs) de la legislatura 15
+python main.py --modo plenos --legislatura 15
+
+# Generar el listado completo de diputados para la legislatura 15
+python main.py --modo diputados --legislatura 15
+
+# Generar el listado de altas y bajas por grupo parlamentario para la legislatura 15
+python main.py --modo grupos --legislatura 15
 ```
 ---
 ## 🧪 Testing y cobertura

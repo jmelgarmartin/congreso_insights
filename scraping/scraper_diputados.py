@@ -14,6 +14,8 @@ from scraping.utils.selenium_utils import (
     click_siguiente_pagina
 )
 from scraping.enriquecedor_suplencias import EnriquecedorSuplencias
+import logging
+logger = logging.getLogger(__name__)
 
 
 class DiputadosScraper:
@@ -35,32 +37,32 @@ class DiputadosScraper:
 
     def _buscar_diputados(self):
         """Aplica los filtros en la web para iniciar la búsqueda de diputados."""
-        print("Abriendo página de búsqueda de diputados...")
+        logger.info("Abriendo página de búsqueda de diputados...")
         self.driver.get(self.url)
         aceptar_cookies(self.driver, self.wait)
 
-        print("Esperando a que cargue el selector de legislatura...")
+        logger.info("Esperando a que cargue el selector de legislatura...")
         self.wait.until(EC.presence_of_element_located((By.ID, "_diputadomodule_legislatura")))
 
-        print(f"Seleccionando legislatura {self.legislatura} si es necesario...")
+        logger.info(f"Seleccionando legislatura {self.legislatura} si es necesario...")
         select_legislatura = self.driver.find_element(By.ID, "_diputadomodule_legislatura")
         if select_legislatura.get_attribute("value") != self.legislatura:
             seleccionar_opcion_por_valor(select_legislatura, self.legislatura)
-            print(f"Legislatura {self.legislatura} seleccionada")
+            logger.info(f"Legislatura {self.legislatura} seleccionada")
 
-        print("Seleccionando 'Todos' en el filtro de tipo...")
+        logger.info("Seleccionando 'Todos' en el filtro de tipo...")
         seleccionar_opcion_por_valor(self.driver.find_element(By.ID, "_diputadomodule_tipo"), "2")
-        print("Filtro 'Todos' seleccionado en tipo")
+        logger.info("Filtro 'Todos' seleccionado en tipo")
 
-        print("Haciendo clic en el botón de búsqueda...")
+        logger.info("Haciendo clic en el botón de búsqueda...")
         hacer_click_esperando(self.driver, self.wait, By.ID, "_diputadomodule_searchButtonDiputadosForm")
 
-        print("Esperando a que desaparezca el spinner de carga...")
+        logger.info("Esperando a que desaparezca el spinner de carga...")
         esperar_spinner(self.wait)
 
-        print("Esperando a que se muestren los resultados por tabla...")
+        logger.info("Esperando a que se muestren los resultados por tabla...")
         esperar_tabla_cargada(self.wait, "#_diputadomodule_contentPaginationDiputados table tbody tr")
-        print("Resultados cargados")
+        logger.info("Resultados cargados")
 
     def _extraer_info_diputado(self, fila):
         """Extrae los datos de un diputado a partir de una fila de la tabla."""
@@ -71,25 +73,26 @@ class DiputadosScraper:
         return {
             "nombre": nombre,
             "grupo_actual": grupo,
-            "provincia": provincia
+            "provincia": provincia,
+            "legislatura":self.legislatura
         }
 
     def _procesar_pagina(self):
         """Procesa la tabla de resultados de la página actual y devuelve una lista de diputados."""
-        print("Procesando página de resultados...")
+        logger.info("Procesando página de resultados...")
         esperar_tabla_cargada(self.wait, "#_diputadomodule_contentPaginationDiputados table tbody tr")
         filas = self.driver.find_elements(By.CSS_SELECTOR, "#_diputadomodule_contentPaginationDiputados table tbody tr")
-        print(f"Número de diputados en esta página: {len(filas)}")
+        logger.info(f"Número de diputados en esta página: {len(filas)}")
         resultados = []
         for fila in filas:
             datos = self._extraer_info_diputado(fila)
-            print(f"Diputado: {datos['nombre']} - Grupo: {datos['grupo_actual']} - Provincia: {datos['provincia']}")
+            logger.info(f"Diputado: {datos['nombre']} - Grupo: {datos['grupo_actual']} - Provincia: {datos['provincia']}")
             resultados.append(datos)
         return resultados
 
     def guardar_csv(self, df: pd.DataFrame):
         """Guarda el DataFrame final de diputados en un archivo CSV."""
-        print(f"Guardando resultados en CSV: {self.output_csv}")
+        logger.info(f"Guardando resultados en CSV: {self.output_csv}")
         df.to_csv(self.output_csv, index=False, encoding="utf-8")
 
     def ejecutar(self):
@@ -107,7 +110,7 @@ class DiputadosScraper:
                 "_diputadomodule_resultsShowedFooterDiputados"
             ]
             if any(es_ultima_pagina(self.driver, id_) for id_ in posibles_ids):
-                print("Última página detectada.")
+                logger.info("Última página detectada.")
                 break
 
             if not click_siguiente_pagina(
@@ -126,4 +129,4 @@ class DiputadosScraper:
         df_diputados = enriquecedor.enriquecer_df_diputados(df_diputados)
 
         self.guardar_csv(df_diputados)
-        print(f"Total diputados guardados: {len(df_diputados)}")
+        logger.info(f"Total diputados guardados: {len(df_diputados)}")
